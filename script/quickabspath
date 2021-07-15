@@ -8,8 +8,14 @@
 use strict;
 use warnings;
 
-use App::quickabspath;
+use File::Spec;
 use Getopt::Long qw(:config gnu_getopt no_ignore_case);
+
+sub quickabspath {
+    defined $ENV{PWD} && length($ENV{PWD})
+        or die "quickabspath: PWD not defined or empty, we need it\n";
+    File::Spec->rel2abs($_[0], $ENV{PWD});
+}
 
 sub parse_cmdline {
     my $res = GetOptions(
@@ -45,7 +51,7 @@ USAGE
 sub run {
     require Cwd;
     for my $path (@ARGV) {
-        print App::quickabspath::quick_abs_path($path), "\n";
+        print quickabspath($path), "\n";
     }
 }
 
@@ -90,6 +96,10 @@ different results:
 =head1 DESCRIPTION
 
 This is like the Unix utility B<realpath>, but without resolving symbolic links.
+It requires C<PWD> environment variable from the shell. It then just uses
+L<File::Spec>'s C<rel2abs> against the specified path. This means if the path is
+already an absolute path, nothing will be done (no checking that path elements
+exist, no resolving of symbolic links).
 
 
 =head1 OPTIONS
