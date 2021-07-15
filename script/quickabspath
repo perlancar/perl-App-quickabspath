@@ -1,0 +1,114 @@
+#!perl
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
+
+use strict;
+use warnings;
+
+use App::quickabspath;
+use Getopt::Long qw(:config gnu_getopt no_ignore_case);
+
+sub parse_cmdline {
+    my $res = GetOptions(
+        'help|h' => sub {
+            print <<USAGE;
+Usage:
+  quickabspath [OPTIONS]... <FILE>...
+  quickabspath --version (-v)
+  quickabspath --help (-h, -?)
+
+Options:
+
+For more details, see the manpage/documentation.
+USAGE
+            exit 0;
+        },
+        'version|v' => sub {
+            no warnings 'once';
+            print "quickabspath version ".($main::VERSION // 'dev').
+                "\n";
+            exit 0;
+        },
+    );
+    if ($res) {
+        if (!@ARGV) {
+            warn "quickabspath: Please specify one or more files\n";
+            $res = 0;
+        }
+    }
+    exit 99 if !$res;
+}
+
+sub run {
+    require Cwd;
+    for my $path (@ARGV) {
+        print App::quickabspath::quick_abs_path($path), "\n";
+    }
+}
+
+# MAIN
+
+parse_cmdline();
+run();
+
+1;
+# ABSTRACT: Print the absolute path, without resolving symlinks
+# PODNAME:
+
+=head1 SYNOPSIS
+
+ % quickabspath [OPTION]... <FILE>...
+
+To demonstrate how C<realpath>, C<quickabspath>, and C<relpath> give you
+different results:
+
+ % pwd
+ /home/ujang
+
+ % mkdir dir1
+ % ln -s dir1 sym1
+
+ % cd sym1
+
+ % realpath .      ;# gives absolute path and resolve symlinks
+ /home/ujang/dir1
+ % abspath .       ;# an alias for realpath
+ /home/ujang/dir1
+
+ % quickabspath .  ;# gives absolute path but does not resolve symlinks
+ /home/ujang/sym1
+
+ % relpath /home/ujang/dir1
+ .
+ % relpath /home/ujang/sym1
+ ../sym1
+
+
+=head1 DESCRIPTION
+
+This is like the Unix utility B<realpath>, but without resolving symbolic links.
+
+
+=head1 OPTIONS
+
+
+=head1 EXIT CODES
+
+0 on success.
+
+99 on command-line options error.
+
+
+=head1 FAQ
+
+
+=head1 SEE ALSO
+
+Unix utility B<realpath>
+
+L<realpath>, L<relpath>
+
+=cut
